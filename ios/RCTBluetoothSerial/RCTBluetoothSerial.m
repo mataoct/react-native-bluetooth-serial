@@ -117,13 +117,25 @@ RCT_EXPORT_METHOD(unsubscribe:(NSString *)delimiter
     resolve((id)kCFBooleanTrue);
 }
 
-RCT_EXPORT_METHOD(writeToDevice:(NSString *)message
+RCT_EXPORT_METHOD(writeToDevice:(NSArray *)message
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
     NSLog(@"write");
     if (message != nil) {
-        NSData *data = [[NSData alloc] initWithBase64EncodedString:message options:NSDataBase64DecodingIgnoreUnknownCharacters];
+        unsigned long c = [message count];
+        uint8_t *bytes = malloc(sizeof(*bytes) * c);
+        
+        unsigned i;
+        for (i = 0; i < c; i++)
+        {
+            NSNumber *number = [message objectAtIndex:i];
+            int byte = [number intValue];
+            bytes[i] = byte;
+        }
+        NSData *data = [NSData dataWithBytesNoCopy:bytes length:c freeWhenDone:YES];
+        
+        
         [_bleShield write:data];
         resolve((id)kCFBooleanTrue);
     } else {
