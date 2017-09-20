@@ -21,6 +21,7 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Arguments;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.Promise;
@@ -359,10 +360,15 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
     /**
      * Write to device over serial port
      */
-    public void writeToDevice(String message, Promise promise) {
-        if (D) Log.d(TAG, "Write " + message);
-        byte[] data = Base64.decode(message, Base64.DEFAULT);
-        mBluetoothService.write(data);
+    public void writeToDevice(ReadableArray message, Promise promise) {
+
+
+        byte[] decoded = new byte[message.size()];
+        for (int i = 0; i < message.size(); i++) {
+            decoded[i] = new Integer(message.getInt(i)).byteValue();
+        }
+
+        mBluetoothService.write(decoded);
         promise.resolve(true);
     }
 
