@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Build;
+import android.os.ParcelUuid;
 import android.util.Log;
 import android.util.Base64;
 
@@ -92,7 +93,7 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
         return "RCTBluetoothSerial";
     }
 
-    @Override
+//    @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) {
         if (D) Log.d(TAG, "On activity result request: " + requestCode + ", result: " + resultCode);
         if (requestCode == REQUEST_ENABLE_BLUETOOTH) {
@@ -119,7 +120,7 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
         }
     }
 
-    @Override
+//    @Override
     public void onNewIntent(Intent intent) {
         if (D) Log.d(TAG, "On new intent");
     }
@@ -347,10 +348,34 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
 
     @ReactMethod
     /**
-     * Check if device is connected
+     * Check if device is connected && return device info
      */
     public void isConnected(Promise promise) {
-        promise.resolve(mBluetoothService.isConnected());
+
+        boolean connectFlag = mBluetoothService.isConnected();
+
+        WritableMap connectInfo = Arguments.createMap();
+        WritableMap currentDevice = Arguments.createMap();
+
+        if (connectFlag){
+            WritableArray uuids = Arguments.createArray();
+            for (ParcelUuid uuid:mBluetoothService.currentDevice().getUuids()) {
+                uuids.pushString(uuid.toString());
+            }
+            currentDevice.putString("name",mBluetoothService.currentDevice().getName());
+            currentDevice.putString("id",mBluetoothService.currentDevice().getAddress());
+            currentDevice.putArray("uuids",uuids);
+        }
+        else {
+            currentDevice.putString("name",null);
+            currentDevice.putString("id",null);
+            currentDevice.putArray("uuids",null);
+        }
+
+        connectInfo.putBoolean("isConnected",mBluetoothService.isConnected());
+        connectInfo.putMap("deviceInfo",currentDevice);
+
+        promise.resolve(connectInfo);
     }
 
     /*********************/

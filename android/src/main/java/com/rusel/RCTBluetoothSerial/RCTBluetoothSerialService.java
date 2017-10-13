@@ -33,6 +33,7 @@ class RCTBluetoothSerialService {
     private ConnectedThread mConnectedThread;
     private RCTBluetoothSerialModule mModule;
     private String mState;
+    private BluetoothDevice mCurrentDevice;
 
     // Constants that indicate the current connection state
     private static final String STATE_NONE = "none";       // we're doing nothing
@@ -79,6 +80,8 @@ class RCTBluetoothSerialService {
     boolean isConnected () {
         return getState().equals(STATE_CONNECTED);
     }
+
+    BluetoothDevice currentDevice () { return  mCurrentDevice; }
 
     /**
      * Write to the ConnectedThread in an unsynchronized manner
@@ -145,6 +148,8 @@ class RCTBluetoothSerialService {
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
 
+        mCurrentDevice = device;
+
         mModule.onConnectionSuccess("Connected to " + device.getName());
         setState(STATE_CONNECTED);
     }
@@ -156,6 +161,8 @@ class RCTBluetoothSerialService {
     private void connectionFailed() {
         mModule.onConnectionFailed("Unable to connect to device"); // Send a failure message
         RCTBluetoothSerialService.this.stop(); // Start the service over to restart listening mode
+
+        mCurrentDevice = null;
     }
 
     /**
@@ -164,6 +171,8 @@ class RCTBluetoothSerialService {
     private void connectionLost() {
         mModule.onConnectionLost("Device connection was lost");  // Send a failure message
         RCTBluetoothSerialService.this.stop(); // Start the service over to restart listening mode
+
+        mCurrentDevice = null;
     }
 
     /**
