@@ -170,27 +170,12 @@ RCT_EXPORT_METHOD(isEnabled:(RCTPromiseResolveBlock)resolve
 RCT_EXPORT_METHOD(isConnected:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
-    if (_bleShield.isConnected) {
+    if (_bleShield.isConnected && _bleShield.activePeripheral) {
         NSLog(@"current connect is %@",_bleShield.activePeripheral);
         
         NSMutableDictionary *connectInfo = [NSMutableDictionary dictionary];
-        NSMutableDictionary *peripheral = [NSMutableDictionary dictionary];
-        NSString *uuid = _bleShield.activePeripheral.identifier.UUIDString;
-        [peripheral setObject: uuid forKey: @"uuid"];
-        [peripheral setObject: uuid forKey: @"id"];
         
-        NSString *name = [_bleShield.activePeripheral name];
-        if (!name) {
-            name = [peripheral objectForKey:@"uuid"];
-        }
-        [peripheral setObject: name forKey: @"name"];
-        
-        NSNumber *rssi = [_bleShield.activePeripheral btsAdvertisementRSSI];
-        if (rssi) { // BLEShield doesn't provide advertised RSSI
-            [peripheral setObject: rssi forKey:@"rssi"];
-        }
-        
-        [connectInfo setObject:peripheral forKey:@"deviceInfo"];
+        [connectInfo setObject:[self peripheralToDic:_bleShield.activePeripheral] forKey:@"deviceInfo"];
         [connectInfo setObject:@(true) forKey:@"isConnected"];
         
         
@@ -241,6 +226,28 @@ RCT_EXPORT_METHOD(clear:(RCTPromiseResolveBlock)resolve)
     resolve((id)kCFBooleanTrue);
 }
 
+
+-(NSMutableDictionary *)peripheralToDic:(CBPeripheral *)p{
+    
+    NSMutableDictionary *peripheral = [NSMutableDictionary dictionary];
+    NSString *uuid = p.identifier.UUIDString;
+    [peripheral setObject: uuid forKey: @"uuid"];
+    [peripheral setObject: uuid forKey: @"id"];
+    
+    NSString *name = [p name];
+    if (!name) {
+        name = [peripheral objectForKey:@"uuid"];
+    }
+    [peripheral setObject: name forKey: @"name"];
+    
+    NSNumber *rssi = [p btsAdvertisementRSSI];
+    if (rssi) { // BLEShield doesn't provide advertised RSSI
+        [peripheral setObject: rssi forKey:@"rssi"];
+    }
+    
+    return peripheral;
+}
+
 #pragma mark - BLEDelegate
 
 - (void)bleDidReceiveData:(unsigned char *)data length:(int)length
@@ -284,8 +291,8 @@ RCT_EXPORT_METHOD(clear:(RCTPromiseResolveBlock)resolve)
 
 - (void)bleDidConnect
 {
-    NSLog(@"bleDidConnect");
-    [self.bridge.eventDispatcher sendDeviceEventWithName:@"connectionSuccess" body:nil];
+    NSLog(@"bleDidConnect %@",_bleShield.activePeripheral);
+    [self.bridge.eventDispatcher sendDeviceEventWithName:@"connectionSuccess" body:[self peripheralToDic:_bleShield.activePeripheral]];
     //[self sendEventWithName:@"connectionSuccess" body:nil];
 
     if (_connectionResolver) {
@@ -383,22 +390,22 @@ RCT_EXPORT_METHOD(clear:(RCTPromiseResolveBlock)resolve)
         NSMutableDictionary *peripheral = [NSMutableDictionary dictionary];
         CBPeripheral *p = [_bleShield.peripherals objectAtIndex:i];
 
-        NSString *uuid = p.identifier.UUIDString;
-        [peripheral setObject: uuid forKey: @"uuid"];
-        [peripheral setObject: uuid forKey: @"id"];
+//        NSString *uuid = p.identifier.UUIDString;
+//        [peripheral setObject: uuid forKey: @"uuid"];
+//        [peripheral setObject: uuid forKey: @"id"];
+//
+//        NSString *name = [p name];
+//        if (!name) {
+//            name = [peripheral objectForKey:@"uuid"];
+//        }
+//        [peripheral setObject: name forKey: @"name"];
+//
+//        NSNumber *rssi = [p btsAdvertisementRSSI];
+//        if (rssi) { // BLEShield doesn't provide advertised RSSI
+//            [peripheral setObject: rssi forKey:@"rssi"];
+//        }
 
-        NSString *name = [p name];
-        if (!name) {
-            name = [peripheral objectForKey:@"uuid"];
-        }
-        [peripheral setObject: name forKey: @"name"];
-
-        NSNumber *rssi = [p btsAdvertisementRSSI];
-        if (rssi) { // BLEShield doesn't provide advertised RSSI
-            [peripheral setObject: rssi forKey:@"rssi"];
-        }
-
-        [peripherals addObject:peripheral];
+        [peripherals addObject:[self peripheralToDic:p]];
     }
 
     return peripherals;
@@ -423,13 +430,14 @@ RCT_EXPORT_METHOD(clear:(RCTPromiseResolveBlock)resolve)
     NSLog(@"Scanning for BLE Peripherals");
 
     // disconnect
-    if (_bleShield.activePeripheral) {
-        if(_bleShield.activePeripheral.state == CBPeripheralStateConnected)
-        {
-            [[_bleShield CM] cancelPeripheralConnection:[_bleShield activePeripheral]];
-            return;
-        }
-    }
+    
+//    if (_bleShield.activePeripheral) {
+//        if(_bleShield.activePeripheral.state == CBPeripheralStateConnected)
+//        {
+//            [[_bleShield CM] cancelPeripheralConnection:[_bleShield activePeripheral]];
+//            return;
+//        }
+//    }
 
     // remove existing peripherals
     if (_bleShield.peripherals) {

@@ -460,8 +460,15 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
      */
     void onConnectionSuccess(String msg) {
         WritableMap params = Arguments.createMap();
+
+
+        WritableMap currentDevice = Arguments.createMap();
+        currentDevice.putString("name",mBluetoothService.currentDevice().getName());
+        currentDevice.putString("id",mBluetoothService.currentDevice().getAddress());
+
+
         params.putString("message", msg);
-        sendEvent(CONN_SUCCESS, null);
+        sendEvent(CONN_SUCCESS, currentDevice);
         if (mConnectedPromise != null) {
             mConnectedPromise.resolve(params);
         }
