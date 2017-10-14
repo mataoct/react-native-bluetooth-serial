@@ -232,7 +232,7 @@ CBUUID *writeCharacteristicUUID;
     posnetSerivceUUID = [CBUUID UUIDWithString:@POSNET_SERVICE_UUID];
 
     NSArray *services = @[redBearLabsServiceUUID, adafruitServiceUUID, lairdServiceUUID, blueGigaServiceUUID, rongtaSerivceUUID, posnetSerivceUUID];
-    [self.CM scanForPeripheralsWithServices:services options: nil];
+    [self.CM scanForPeripheralsWithServices:nil options: nil];
 #else
     [self.CM scanForPeripheralsWithServices:nil options:nil]; // Start scanning
 #endif

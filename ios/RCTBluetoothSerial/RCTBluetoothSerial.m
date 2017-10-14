@@ -171,9 +171,34 @@ RCT_EXPORT_METHOD(isConnected:(RCTPromiseResolveBlock)resolve
                   rejector:(RCTPromiseRejectBlock)reject)
 {
     if (_bleShield.isConnected) {
-        resolve((id)kCFBooleanTrue);
+        NSLog(@"current connect is %@",_bleShield.activePeripheral);
+        
+        NSMutableDictionary *connectInfo = [NSMutableDictionary dictionary];
+        NSMutableDictionary *peripheral = [NSMutableDictionary dictionary];
+        NSString *uuid = _bleShield.activePeripheral.identifier.UUIDString;
+        [peripheral setObject: uuid forKey: @"uuid"];
+        [peripheral setObject: uuid forKey: @"id"];
+        
+        NSString *name = [_bleShield.activePeripheral name];
+        if (!name) {
+            name = [peripheral objectForKey:@"uuid"];
+        }
+        [peripheral setObject: name forKey: @"name"];
+        
+        NSNumber *rssi = [_bleShield.activePeripheral btsAdvertisementRSSI];
+        if (rssi) { // BLEShield doesn't provide advertised RSSI
+            [peripheral setObject: rssi forKey:@"rssi"];
+        }
+        
+        [connectInfo setObject:peripheral forKey:@"deviceInfo"];
+        [connectInfo setObject:@(true) forKey:@"isConnected"];
+        
+        
+        resolve((id)connectInfo);
     } else {
-        resolve((id)kCFBooleanFalse);
+        NSMutableDictionary *connectInfo = [NSMutableDictionary dictionary];
+        [connectInfo setObject:@(false) forKey:@"isConnected"];
+        resolve((id)connectInfo);
     }
 }
 
