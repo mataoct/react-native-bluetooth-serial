@@ -14,7 +14,6 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.ParcelUuid;
 import android.util.Log;
-import android.util.Base64;
 
 import com.facebook.react.bridge.ActivityEventListener;
 import com.facebook.react.bridge.LifecycleEventListener;
@@ -358,18 +357,18 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
         WritableMap currentDevice = Arguments.createMap();
 
         if (connectFlag){
-            WritableArray uuids = Arguments.createArray();
-            for (ParcelUuid uuid:mBluetoothService.currentDevice().getUuids()) {
-                uuids.pushString(uuid.toString());
-            }
+//            WritableArray uuids = Arguments.createArray();
+//            for (ParcelUuid uuid:mBluetoothService.currentDevice().getUuids()) {
+//                uuids.pushString(uuid.toString());
+//            }
             currentDevice.putString("name",mBluetoothService.currentDevice().getName());
             currentDevice.putString("id",mBluetoothService.currentDevice().getAddress());
-            currentDevice.putArray("uuids",uuids);
+//            currentDevice.putArray("uuids",uuids);
         }
         else {
             currentDevice.putString("name",null);
             currentDevice.putString("id",null);
-            currentDevice.putArray("uuids",null);
+//            currentDevice.putArray("uuids",null);
         }
 
         connectInfo.putBoolean("isConnected",mBluetoothService.isConnected());
@@ -688,8 +687,13 @@ public class RCTBluetoothSerialModule extends ReactContextBaseJavaModule impleme
 
                 if (BluetoothDevice.ACTION_FOUND.equals(action)) {
                     BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                    WritableMap d = deviceToWritableMap(device);
-                    unpairedDevices.pushMap(d);
+                    if(device.getType() != 2){
+                        WritableMap d = deviceToWritableMap(device);
+                        unpairedDevices.pushMap(d);
+                    }
+//                    Log.e(TAG,d.toString());
+
+
                 } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                     if (D) Log.d(TAG, "Discovery finished");
                     if (mDeviceDiscoveryPromise != null) {
